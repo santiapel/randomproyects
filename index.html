@@ -6,20 +6,22 @@
 </head>
 <body>
 
-  <h2>Reproductor de YouTube Music (Aleatorio con Auto-Recarga)</h2>
+  <h2>Reproductor de YouTube Music (IDs 100% Aleatorios)</h2>
   <div id="player"></div>
 
   <script>
-    // Lista de IDs de videos de YouTube/YouTube Music
-    // Puedes reemplazar o añadir más IDs de videos a esta lista
-    const videoIds = [
-      'dQw4w9WgXcQ',
-      '3JZ_D3ELwOQ',
-      'L_jWHffIx5E',
-      'fJ9rUzIMcZQ'
-    ];
-
     let player;
+
+    // Función para generar un ID de YouTube completamente aleatorio de 11 caracteres
+    function generateRandomVideoId() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-';
+      let randomId = '';
+      for (let i = 0; i < 11; i++) {
+        const randomIndex = Math.floor(Math.random() * chars.length);
+        randomId += chars[randomIndex];
+      }
+      return randomId;
+    }
 
     // Cargar la API de YouTube Iframe asynchronously
     const tag = document.createElement('script');
@@ -27,23 +29,19 @@
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-    function getRandomVideoId() {
-      const randomIndex = Math.floor(Math.random() * videoIds.length);
-      return videoIds[randomIndex];
-    }
-
     // Esta función se ejecuta automáticamente cuando la API está lista
     function onYouTubeIframeAPIReady() {
       player = new YT.Player('player', {
         height: '360',
         width: '640',
-        videoId: getRandomVideoId(),
+        videoId: generateRandomVideoId(),
         playerVars: {
           'autoplay': 1,
           'playsinline': 1
         },
         events: {
           'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange,
           'onError': onPlayerError
         }
       });
@@ -53,14 +51,22 @@
       event.target.playVideo();
     }
 
-    // Si ocurre un error (link inválido, deshabilitado, restringido, etc.), recarga con otro ID aleatorio
-    function onPlayerError(event) {
-      console.warn("Error al cargar el video (Código de error: " + event.data + "). Reintentando con otro link...");
-      loadRandomNextVideo();
+    // Cuando termina un video, busca otro ID aleatorio
+    function onPlayerStateChange(event) {
+      if (event.data === YT.PlayerState.ENDED) {
+        loadNextRandomVideo();
+      }
     }
 
-    function loadRandomNextVideo() {
-      const nextId = getRandomVideoId();
+    // Como la gran mayoría de los IDs aleatorios no existirán (darán error 100 o 150),
+    // el reproductor los saltará automáticamente en milisegundos hasta encontrar uno real.
+    function onPlayerError(event) {
+      console.warn("ID inválido (" + event.data + "). Intentando con otro ID aleatorio...");
+      loadNextRandomVideo();
+    }
+
+    function loadNextRandomVideo() {
+      const nextId = generateRandomVideoId();
       player.loadVideoById(nextId);
     }
   </script>
