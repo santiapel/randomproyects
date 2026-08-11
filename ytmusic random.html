@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reproductor Aleatorio YouTube Music</title>
+</head>
+<body>
+
+  <h2>Reproductor de YouTube Music (Aleatorio con Auto-Recarga)</h2>
+  <div id="player"></div>
+
+  <script>
+    // Lista de IDs de videos de YouTube/YouTube Music
+    // Puedes reemplazar o añadir más IDs de videos a esta lista
+    const videoIds = [
+      'dQw4w9WgXcQ',
+      '3JZ_D3ELwOQ',
+      'L_jWHffIx5E',
+      'fJ9rUzIMcZQ'
+    ];
+
+    let player;
+
+    // Cargar la API de YouTube Iframe asynchronously
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function getRandomVideoId() {
+      const randomIndex = Math.floor(Math.random() * videoIds.length);
+      return videoIds[randomIndex];
+    }
+
+    // Esta función se ejecuta automáticamente cuando la API está lista
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '360',
+        width: '640',
+        videoId: getRandomVideoId(),
+        playerVars: {
+          'autoplay': 1,
+          'playsinline': 1
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onError': onPlayerError
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      event.target.playVideo();
+    }
+
+    // Si ocurre un error (link inválido, deshabilitado, restringido, etc.), recarga con otro ID aleatorio
+    function onPlayerError(event) {
+      console.warn("Error al cargar el video (Código de error: " + event.data + "). Reintentando con otro link...");
+      loadRandomNextVideo();
+    }
+
+    function loadRandomNextVideo() {
+      const nextId = getRandomVideoId();
+      player.loadVideoById(nextId);
+    }
+  </script>
+
+</body>
+</html>
